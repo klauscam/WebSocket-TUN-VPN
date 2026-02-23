@@ -32,9 +32,7 @@ relay server.
 5.  The receiving client writes packets back into its TUN device.
 
 ```{=html}
-<!-- -->
-```
-    Client A (10.0.0.2)
+Client A (10.0.0.2)
           │
           │  WebSocket
           ▼
@@ -42,7 +40,8 @@ relay server.
           ▲
           │  WebSocket
           │
-    Client B (10.0.0.3)
+Client B (10.0.0.3)
+```
 
 The server acts purely as a packet forwarder. It does not inspect or
 modify IP payloads.
@@ -54,7 +53,7 @@ modify IP payloads.
 -   Linux (TUN/TAP support required)
 -   Python 3.9+
 -   Root privileges (required for TUN interface)
--   `websockets` library
+-   websockets library
 
 Install dependency:
 
@@ -74,7 +73,9 @@ sudo python server.py
 
 The server listens on:
 
+    ```
     ws://0.0.0.0:80
+    ```
 
 You may change the port if needed.
 
@@ -84,7 +85,7 @@ You may change the port if needed.
 
 Edit in `client.py`:
 
-``` python
+``` {=python}
 SERVER_URL = "ws://<server-ip>:80"
 my_ip = "10.0.0.X"
 ```
