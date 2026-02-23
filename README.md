@@ -2,8 +2,8 @@
 
 A minimal Layer-3 VPN tunnel implemented in Python using:
 
--   Linux **TUN** interfaces\
--   **WebSockets** for transport\
+-   Linux **TUN** interfaces
+-   **WebSockets** for transport
 -   `asyncio` for concurrency
 
 This project creates a simple IP-over-WebSocket tunnel that allows
