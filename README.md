@@ -73,9 +73,9 @@ sudo python server.py
 
 The server listens on:
 
-    ```
+
     ws://0.0.0.0:80
-    ```
+
 
 You may change the port if needed.
 
@@ -85,7 +85,7 @@ You may change the port if needed.
 
 Edit in `client.py`:
 
-``` {=python}
+``` python
 SERVER_URL = "ws://<server-ip>:80"
 my_ip = "10.0.0.X"
 ```
@@ -155,17 +155,13 @@ For production usage, consider:
 -   Reads packets using `select`
 -   Sends packets as:
 
-```{=html}
-<!-- -->
-```
-    tx:<destination_ip>:<hex_packet>
 
--   Receives packets as:
+            tx:<destination_ip>:<hex_packet>
 
-```{=html}
-<!-- -->
-```
-    rx:<hex_packet>
+-  Receives packets as:
+
+
+             rx:<hex_packet>
 
 ------------------------------------------------------------------------
 
