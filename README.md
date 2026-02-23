@@ -1,62 +1,216 @@
-# IP over Anything
+# WebSocket TUN VPN
 
-**Tunnel IP traffic over unconventional protocols and mediums—MQTT, WebSockets, HTTP, Databases, SMS, and more.**
+A minimal Layer-3 VPN tunnel implemented in Python using:
 
-## Overview
+-   Linux **TUN** interfaces\
+-   **WebSockets** for transport\
+-   `asyncio` for concurrency
 
-**IP over Anything** is an innovative and experimental project demonstrating how IP packets can be tunneled through virtually any transport medium or protocol. This flexibility allows for VPN-like connectivity in environments where traditional VPN solutions might be restricted, monitored, or blocked.
+This project creates a simple IP-over-WebSocket tunnel that allows
+multiple clients to exchange raw IP packets through a central WebSocket
+relay server.
 
-This repository includes practical implementations, scripts, and examples of tunneling IP over:
-- **MQTT**
-- **WebSockets**
-- **HTTP (GET/POST)**
-- **Databases (MongoDB)**
-- **SMS** (planned)
+------------------------------------------------------------------------
 
-The core mechanism relies on Linux's TUN interface, abstracting layers 1 (Physical), 2 (Data Link), and 3 (Network), thus enabling seamless tunneling through diverse protocols.
+## ✨ Features
 
-## Current Implementations
+-   Layer-3 IP tunneling (TUN device)
+-   Asynchronous packet forwarding
+-   Simple client registration by IP
+-   Direct packet routing between connected peers
+-   Minimal dependencies
+-   Easy to understand and extend
 
-- **IP over MQTT:** IP packets encapsulated in MQTT messages.
-- **IP over WebSockets:** Optimized transport layer using WebSockets.
-- **IP over HTTP:** Using standard HTTP requests to tunnel IP data.
-- **IP over Databases:** Storing and retrieving IP packets via database records.
+------------------------------------------------------------------------
 
-## Planned Features
+## 🧠 How It Works
 
-- **IP over SMS:** Adjusting MTU to SMS constraints, minimizing fragmentation.
-- **Virtual Layer 1:** Exploring deeper network-layer tunneling to virtualize physical layer connections.
-- **Performance optimization:** Rewriting core components in Rust for efficiency and scalability.
+1.  Each client creates a Linux **TUN interface**.
+2.  Outgoing IP packets are read from the TUN device.
+3.  Packets are serialized (hex) and sent to the WebSocket server.
+4.  The server forwards packets based on destination IP.
+5.  The receiving client writes packets back into its TUN device.
 
-## Requirements
+```{=html}
+<!-- -->
+```
+    Client A (10.0.0.2)
+          │
+          │  WebSocket
+          ▼
+        Server
+          ▲
+          │  WebSocket
+          │
+    Client B (10.0.0.3)
 
-- Linux-based system (for TUN/TAP interface support)
-- Python
-- Dependencies (specified in individual project directories)
+The server acts purely as a packet forwarder. It does not inspect or
+modify IP payloads.
 
-## Installation & Usage
+------------------------------------------------------------------------
 
-1. Clone this repository:
-   ```sh
-   git clone https://github.com/klauscam/IPoverAnything.git
-   ```
+## 📦 Requirements
 
-2. Navigate to the desired implementation directory, for example:
-   ```sh
-   cd IPoverAnything/IPoverWebsockets
-   ```
+-   Linux (TUN/TAP support required)
+-   Python 3.9+
+-   Root privileges (required for TUN interface)
+-   `websockets` library
 
-3. Follow individual README instructions for setup and execution.
+Install dependency:
 
-## Contributions
+``` bash
+pip install websockets
+```
 
-Contributions, improvements, and ideas are warmly welcomed. Feel free to submit pull requests, open issues, or start discussions on GitHub.
+------------------------------------------------------------------------
 
-## License
+## 🚀 Setup & Usage
 
-This project is licensed under the **GPL-3.0 License**—see the [LICENSE](LICENSE) file for details.
+### 1️⃣ Start the Server
 
-## Disclaimer
+``` bash
+sudo python server.py
+```
 
-This project is intended for educational purposes, research, and authorized security assessments only. Misuse may lead to legal consequences. Use responsibly.
+The server listens on:
 
+    ws://0.0.0.0:80
+
+You may change the port if needed.
+
+------------------------------------------------------------------------
+
+### 2️⃣ Configure Client
+
+Edit in `client.py`:
+
+``` python
+SERVER_URL = "ws://<server-ip>:80"
+my_ip = "10.0.0.X"
+```
+
+Each client must have a **unique IP address** in the same subnet.
+
+------------------------------------------------------------------------
+
+### 3️⃣ Configure TUN Interface
+
+You must configure the TUN interface manually (recommended).
+
+Example:
+
+``` bash
+sudo ip tuntap add dev tun0 mode tun
+sudo ip addr add 10.0.0.2/24 dev tun0
+sudo ip link set tun0 up
+```
+
+Repeat on the other client with a different IP.
+
+------------------------------------------------------------------------
+
+### 4️⃣ Run the Client
+
+``` bash
+sudo python client.py
+```
+
+Once connected, clients can ping each other:
+
+``` bash
+ping 10.0.0.3
+```
+
+------------------------------------------------------------------------
+
+## 🔐 Important Security Notice
+
+⚠️ This project is a **proof-of-concept** and does **NOT** provide:
+
+-   Encryption
+-   Authentication
+-   Authorization
+-   Replay protection
+-   Traffic obfuscation
+-   DoS protection
+
+Do **NOT** expose this server directly to the public internet.
+
+For production usage, consider:
+
+-   Running behind Nginx with TLS
+-   Adding authentication tokens
+-   Using WSS (TLS)
+-   Adding encryption at packet level
+-   Implementing client verification
+
+------------------------------------------------------------------------
+
+## 🏗 Architecture
+
+### Client
+
+-   Opens `/dev/net/tun`
+-   Reads packets using `select`
+-   Sends packets as:
+
+```{=html}
+<!-- -->
+```
+    tx:<destination_ip>:<hex_packet>
+
+-   Receives packets as:
+
+```{=html}
+<!-- -->
+```
+    rx:<hex_packet>
+
+------------------------------------------------------------------------
+
+### Server
+
+Maintains a dictionary:
+
+``` python
+clients = {
+    "10.0.0.2": websocket,
+    "10.0.0.3": websocket,
+}
+```
+
+Forwards packets immediately to destination if connected.
+
+Drops packets if destination is offline.
+
+------------------------------------------------------------------------
+
+## ⚙️ Known Limitations
+
+-   No NAT traversal
+-   No automatic routing configuration
+-   No multi-hop routing
+-   No MTU management
+-   No fragmentation handling
+-   No reconnection state sync
+-   Single relay node architecture
+
+------------------------------------------------------------------------
+
+## 📚 Educational Purpose
+
+This project is designed to demonstrate:
+
+-   Linux TUN interface usage
+-   Raw IP packet handling
+-   Async IO networking
+-   Building simple VPN architectures
+-   WebSocket-based tunneling
+
+------------------------------------------------------------------------
+
+## ⚠️ Disclaimer
+
+This software is provided for educational and research purposes only.\
+The author is not responsible for misuse or damages caused by this
+software.
