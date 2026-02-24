@@ -1,5 +1,7 @@
 # WebSocket TUN VPN
 
+##This is purely an educational project
+
 A minimal Layer-3 VPN tunnel implemented in Python using:
 
 -   Linux **TUN** interfaces
